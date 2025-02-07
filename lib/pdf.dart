@@ -44,7 +44,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text("PDF Viewer")),
       body: localPath == null
-          ? const Center(child: CircularProgressIndicator())  // Show loading until PDF is ready
+          ? const Center(child: CircularProgressIndicator())  
           : PDFView(
               filePath: localPath!,
               enableSwipe: true,

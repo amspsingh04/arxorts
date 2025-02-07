@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'pdf.dart'; // PDF viewer screen
-
+import 'pdf.dart'; 
 class SwipeScreen extends StatefulWidget {
   const SwipeScreen({super.key});
 
@@ -78,7 +77,6 @@ class _SwipeScreenState extends State<SwipeScreen> {
                           ),
                         ),
 
-                        // Content Section
                         Expanded(
                           child: Container(
                             width: double.infinity,
@@ -96,7 +94,6 @@ class _SwipeScreenState extends State<SwipeScreen> {
                           ),
                         ),
 
-                        // Button Section
                         SizedBox(
                           width: double.infinity,
                           height: 50,
