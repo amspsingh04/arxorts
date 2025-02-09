@@ -43,11 +43,11 @@ class _SavedArticlesScreenState extends State<SavedArticlesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Saved Articles")),
+      appBar: AppBar(title: const Text("Saved Articles")),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : savedArticles.isEmpty
-              ? Center(child: Text("No saved articles!"))
+              ? const Center(child: Text("No saved articles!"))
               : ListView.builder(
                   itemCount: savedArticles.length,
                   itemBuilder: (context, index) {

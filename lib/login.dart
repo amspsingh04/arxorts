@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'swipe.dart'; // Import your SwipeScreen
+import 'swipe.dart'; 
 
 class LoginPage extends StatefulWidget {
   @override
@@ -18,18 +18,16 @@ class _LoginPageState extends State<LoginPage> {
     _checkUser();
   }
 
-  // If user is already signed in, go to SwipeScreen
   void _checkUser() {
     if (_auth.currentUser != null) {
       _navigateToSwipeScreen();
     }
   }
 
-  // Google Sign-In
   Future<void> _signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return; // User canceled sign-in
+      if (googleUser == null) return; 
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
@@ -45,7 +43,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       print("Google Sign-In Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Sign-In Failed")),
+        const SnackBar(content: Text("Sign-In Failed")),
       );
     }
   }
@@ -54,18 +52,18 @@ class _LoginPageState extends State<LoginPage> {
   void _navigateToSwipeScreen() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => SwipeScreen()),
+      MaterialPageRoute(builder: (context) => const SwipeScreen()),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Google Auth Login")),
+      appBar: AppBar(title: const Text("Google Auth Login")),
       body: Center(
         child: ElevatedButton(
           onPressed: _signInWithGoogle,
-          child: Text("Sign in with Google"),
+          child: const Text("Sign in with Google"),
         ),
       ),
     );

@@ -21,7 +21,11 @@ class _SwipeScreenState extends State<SwipeScreen> {
   bool isLoading = true;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   User? user;
-  Set<String> savedArticleIds = {}; // Stores saved article IDs for quick checking
+  Set<String> savedArticleIds = {}; 
+  int articlesPerPage = 10; 
+  DocumentSnapshot? lastDocument; 
+  bool isFetchingMore = false; 
+  bool hasMoreArticles = true; 
 
   @override
   void initState() {
@@ -32,21 +36,37 @@ class _SwipeScreenState extends State<SwipeScreen> {
   }
 
   Future<void> fetchArticles() async {
-    try {
-      QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('articles')
-          .orderBy('timestamp', descending: true)
-          .get();
+  if (!hasMoreArticles || isFetchingMore) return; 
+  setState(() => isFetchingMore = true);
 
-      setState(() {
-        articles = snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
-        isLoading = false;
-      });
-    } catch (e) {
-      print('Error fetching articles: $e');
-      setState(() => isLoading = false);
+  try {
+    Query query = FirebaseFirestore.instance
+        .collection('articles')
+        .orderBy('timestamp', descending: true)
+        .limit(articlesPerPage);
+
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument!);
     }
+
+    QuerySnapshot snapshot = await query.get();
+
+    if (snapshot.docs.isNotEmpty) {
+      setState(() {
+        lastDocument = snapshot.docs.last; 
+        articles.addAll(snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>));
+      });
+    } else {
+      setState(() {
+        hasMoreArticles = false; 
+      });
+    }
+  } catch (e) {
+    print('Error fetching articles: $e');
+  } finally {
+    setState(() => isFetchingMore = false);
   }
+}
 
   Future<void> fetchSavedArticles() async {
     if (user == null) return;
@@ -74,13 +94,11 @@ class _SwipeScreenState extends State<SwipeScreen> {
         .collection('saved_articles');
 
     if (savedArticleIds.contains(articleId)) {
-      // Remove from saved articles
       await savedArticlesRef.doc(articleId).delete();
       setState(() {
         savedArticleIds.remove(articleId);
       });
     } else {
-      // Save article
       await savedArticlesRef.doc(articleId).set(article);
       setState(() {
         savedArticleIds.add(articleId);
@@ -109,14 +127,14 @@ class _SwipeScreenState extends State<SwipeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Articles"),
-        backgroundColor: Color.fromARGB(220, 255, 98, 98),
+        backgroundColor: const Color.fromARGB(220, 255, 98, 98),
         
       ),
       drawer: Drawer(
         child: Column(
           children: [
             UserAccountsDrawerHeader(
-              decoration: BoxDecoration(color: Colors.black),
+              decoration: const BoxDecoration(color: Colors.black),
               accountName: Text(user?.displayName ?? "Guest"),
               accountEmail: Text(user?.email ?? "No Email"),
               currentAccountPicture: CircleAvatar(
@@ -126,8 +144,8 @@ class _SwipeScreenState extends State<SwipeScreen> {
             ),
             
             ListTile(
-              leading: Icon(Icons.bookmark),
-              title: Text("Saved Articles"),
+              leading: const Icon(Icons.bookmark),
+              title: const Text("Saved Articles"),
               onTap: () {
                 Navigator.push(
                   context,
@@ -136,8 +154,8 @@ class _SwipeScreenState extends State<SwipeScreen> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.logout),
-              title: Text("Sign Out"),
+              leading: const Icon(Icons.logout),
+              title: const Text("Sign Out"),
               onTap: _signOut,
             ),
           ],
@@ -145,18 +163,23 @@ class _SwipeScreenState extends State<SwipeScreen> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : articles.isEmpty
-              ? const Center(child: Text("No articles found!", style: TextStyle(fontSize: 20)))
-              : PageView.builder(
-                  scrollDirection: Axis.vertical,
-                  itemCount: articles.length,
-                  itemBuilder: (context, index) {
-                    final article = articles[index];
-                    final articleId = article['id'] ?? index.toString();
-
+          : NotificationListener<ScrollNotification>(
+              onNotification: (ScrollNotification scrollInfo) {
+                if (scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent &&
+                    hasMoreArticles &&
+                    !isFetchingMore) {
+                  fetchArticles(); 
+                }
+                return false;
+              },
+              child: PageView.builder(
+                scrollDirection: Axis.vertical,
+                itemCount: articles.length,
+                itemBuilder: (context, index) {
+                  final article = articles[index];
+                  final articleId = article['id'] ?? index.toString();
                     return Column(
                       children: [
-                        // Header Section
                         Container(
                           width: double.infinity,
                           color: Colors.black,
@@ -233,6 +256,6 @@ class _SwipeScreenState extends State<SwipeScreen> {
                     );
                   },
                 ),
-    );
+    ));
   }
 }
