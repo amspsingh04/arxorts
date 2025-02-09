@@ -20,6 +20,7 @@ Future<void> fetchAndStoreArxivArticles() async {
           (element) => element.getAttribute('title') == 'pdf',
         ).getAttribute('href') ?? '';
 
+        // Store in Firestore
         await firestore.collection('articles').doc(title).set({
           'title': title,
           'abstract': abstract,
